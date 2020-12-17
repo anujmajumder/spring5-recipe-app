@@ -43,7 +43,7 @@ public class RecipeServiceImplTest {
 
         RecipeCommand recipe = new RecipeCommand();
         recipe.setId(2L);
-
+        recipe.setDescription("test");
 
 
         recipeService.saveRecipeCommand(recipe);
