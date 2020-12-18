@@ -51,25 +51,39 @@ public class IngredientServiceImpl implements IngredientService {
     @Override
     public IngredientCommand saveOrUpdate(IngredientCommand command) {
 
+
+
         Optional<Recipe> recipe = recipeRepository.findById(command.getRecipeId());
 
         Optional<Ingredient> ingredients = recipe.get().getIngredients().stream().filter(ingredient -> {
            return ingredient.getId().equals(command.getId());
         }).findFirst();
 
-       Ingredient ingredient = ingredients.get();
+        if(ingredients.isPresent()) {
 
-       ingredient.setAmount(command.getAmount());
-       ingredient.setDescription(command.getDescription());
-       ingredient.setUom(unitOfMeasureRepository.findById(command.getUnitOfMeasure().getId()).get());
+            Ingredient ingredient = ingredients.get();
 
-       //recipe.get().addIngredient(ingredient);
+            ingredient.setAmount(command.getAmount());
+            ingredient.setDescription(command.getDescription());
+            ingredient.setUom(unitOfMeasureRepository.findById(command.getUnitOfMeasure().getId()).get());
+
+        }
+        else recipe.get().addIngredient( ingredientCommandToIngredient.convert(command));
 
        Recipe savedRecipe = recipeRepository.save(recipe.get());
 
 
+        Optional<Ingredient> savedIngredient = savedRecipe.getIngredients().stream().filter(ingredient1 ->
+                ingredient1.getId().equals(command.getId())).findFirst();
 
-        return ingredientToIngredientCommand.convert(savedRecipe.getIngredients().stream().filter(ingredient1 ->
-                ingredient1.getId().equals(command.getId())).findFirst().get());
+        if(!savedIngredient.isPresent())
+        {
+             savedIngredient = savedRecipe.getIngredients().stream().filter(ingredient1 -> ingredient1.getDescription().equals(command.getDescription())).
+                    filter(ingredient1 -> ingredient1.getAmount().equals(command.getAmount())).
+                    filter(ingredient1 -> ingredient1.getUom().getId().equals(command.getUnitOfMeasure().getId())).findFirst();
+        }
+
+
+        return ingredientToIngredientCommand.convert(savedIngredient.get());
     }
 }
